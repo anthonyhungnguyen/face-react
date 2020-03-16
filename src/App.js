@@ -40,40 +40,42 @@ const App = () => {
 			inputSize: 128,
 			scoreThreshold: 0.5
 		})
-		while (true) {
+		setInterval(async () => {
 			const detections = await faceapi
 				.detectAllFaces(video, options)
 				.withFaceLandmarks(true)
 				.withFaceDescriptors()
 			const resizedDetections = faceapi.resizeResults(detections, displaySize)
 			ctx.clearRect(0, 0, displaySize.width, displaySize.height)
-			if (detections.length > 0) {
-				const box = {
-					x: resizedDetections[0].detection._box.x,
-					y: resizedDetections[0].detection._box.y,
-					width: resizedDetections[0].detection._box.width,
-					height: resizedDetections[0].detection._box.height
-				}
-				if (faceMatcherRef.current) {
-					const bestMatch = faceMatcherRef.current.findBestMatch(
-						detections[0].descriptor
-					)
-					const drawOptions = {
-						label: bestMatch.toString(),
-						lineWidth: 2
+			if (resizedDetections.length > 0) {
+				resizedDetections.forEach(dect => {
+					const box = {
+						x: dect.detection._box.x,
+						y: dect.detection._box.y,
+						width: dect.detection._box.width,
+						height: dect.detection._box.height
 					}
-					const drawBox = new faceapi.draw.DrawBox(box, drawOptions)
-					drawBox.draw(ctx)
-				} else {
-					const drawOptions = {
-						label: 'Unknown',
-						lineWidth: 2
+					if (faceMatcherRef.current) {
+						const bestMatch = faceMatcherRef.current.findBestMatch(
+							dect.descriptor
+						)
+						const drawOptions = {
+							label: bestMatch.toString(),
+							lineWidth: 2
+						}
+						const drawBox = new faceapi.draw.DrawBox(box, drawOptions)
+						drawBox.draw(ctx)
+					} else {
+						const drawOptions = {
+							label: 'Unknown',
+							lineWidth: 2
+						}
+						const drawBox = new faceapi.draw.DrawBox(box, drawOptions)
+						drawBox.draw(ctx)
 					}
-					const drawBox = new faceapi.draw.DrawBox(box, drawOptions)
-					drawBox.draw(ctx)
-				}
+				})
 			}
-		}
+		}, 100)
 	}
 
 	const handleImageChange = async () => {
